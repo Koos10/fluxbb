@@ -18,6 +18,7 @@ class DBLayer
 	var $query_result;
 	var $in_transaction = 0;
 
+	var $last_query;
 	var $saved_queries = array();
 	var $num_queries = 0;
 
@@ -87,6 +88,8 @@ class DBLayer
 	{
 		if (strlen($sql) > 140000)
 			exit('Insane query. Aborting.');
+
+		$this->last_query = $sql;
 
 		if (defined('PUN_SHOW_QUERIES'))
 			$q_start = get_microtime();
@@ -179,7 +182,15 @@ class DBLayer
 
 	function num_rows($query_id = 0)
 	{
-		return false;
+		if ($query_id && preg_match ('/\bSELECT\b/i', $this->last_query))
+		{
+			$num_rows_query = preg_replace ('/\bSELECT\b(.*)\bFROM\b/imsU', 'SELECT COUNT(*) FROM', $this->last_query);
+			$result = $this->query($num_rows_query);
+
+			return intval($this->result($result));
+		}
+		else
+			return false;
 	}
 
 
