@@ -96,6 +96,8 @@ if (isset($_GET['tid']))
 			if ($db->num_rows($result) != substr_count($posts, ',') + 1)
 				message($lang_common['Bad request'], false, '404 Not Found');
 
+			decrease_post_counts($posts);
+
 			// Delete the posts
 			$db->query('DELETE FROM '.$db->prefix.'posts WHERE id IN('.$posts.')') or error('Unable to delete posts', __FILE__, __LINE__, $db->error());
 
@@ -689,7 +691,11 @@ else if (isset($_POST['delete_topics']) || isset($_POST['delete_topics_comply'])
 
 		// We have to check that we actually have a list of post IDs since we could be deleting just a redirect topic
 		if ($post_ids != '')
+		{
+			decrease_post_counts($post_ids);
+
 			strip_search_index($post_ids);
+		}
 
 		// Delete posts
 		$db->query('DELETE FROM '.$db->prefix.'posts WHERE topic_id IN('.$topics.')') or error('Unable to delete posts', __FILE__, __LINE__, $db->error());

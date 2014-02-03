@@ -730,6 +730,8 @@ function delete_topic($topic_id)
 	// Make sure we have a list of post IDs
 	if ($post_ids != '')
 	{
+		decrease_post_counts($post_ids);
+
 		strip_search_index($post_ids);
 
 		// Delete posts in topic
@@ -744,7 +746,7 @@ function delete_topic($topic_id)
 //
 // Delete a single post
 //
-function delete_post($post_id, $topic_id)
+function delete_post($post_id, $topic_id, $poster_id)
 {
 	global $db;
 
@@ -754,6 +756,9 @@ function delete_post($post_id, $topic_id)
 
 	// Delete the post
 	$db->query('DELETE FROM '.$db->prefix.'posts WHERE id='.$post_id) or error('Unable to delete post', __FILE__, __LINE__, $db->error());
+
+	// Decrement user post count
+	$db->query('UPDATE '.$db->prefix.'users SET num_posts=num_posts-1 WHERE id='.$poster_id) or error('Unable to update user post count', __FILE__, __LINE__, $db->error());
 
 	strip_search_index($post_id);
 
@@ -2053,6 +2058,30 @@ function forum_is_writable($path)
 		@unlink($path);
 
 	return true;
+}
+
+
+//
+// Decrease user post counts (used before deleting posts)
+//
+function decrease_post_counts($post_ids)
+{
+		global $db;
+
+		// Count the post counts for each user to be subtracted
+		$user_posts = array();
+		$result = $db->query('SELECT poster_id FROM '.$db->prefix.'posts WHERE id IN('.$post_ids.')') or error('Unable to fetch posts', __FILE__, __LINE__, $db->error());
+		while ($row = $db->fetch_assoc($result))
+		{
+			if (!isset($user_posts[$row['poster_id']]))
+				$user_posts[$row['poster_id']] = 1;
+			else
+				++$user_posts[$row['poster_id']];
+		}
+
+		// Decrease the post counts
+		foreach($user_posts as $user_id => $subtract)
+			$db->query('UPDATE '.$db->prefix.'users SET num_posts=num_posts-'.$subtract.' WHERE id='.$user_id) or error('Unable to update user post count', __FILE__, __LINE__, $db->error());
 }
 
 
