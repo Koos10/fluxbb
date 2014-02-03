@@ -690,7 +690,7 @@ switch ($stage)
 {
 	// Start by updating the database structure
 	case 'start':
-		$query_str = '?stage=preparse_posts';
+		$query_str = '?stage=conv_mods&req_old_charset='.$old_charset;
 
 		// If we don't need to update the database, skip this stage
 		if (isset($pun_config['o_database_revision']) && $pun_config['o_database_revision'] >= UPDATE_TO_DB_REVISION)
@@ -1473,7 +1473,7 @@ switch ($stage)
 
 	// Convert users
 	case 'conv_users':
-		$query_str = '?stage=preparse_posts';
+		$query_str = '?stage=conv_mods&req_old_charset='.$old_charset;
 
 		if ($start_at == 0)
 			$_SESSION['dupe_users'] = array();
@@ -1511,7 +1511,7 @@ switch ($stage)
 
 	// Handle any duplicate users which occured due to conversion
 	case 'conv_users_dupe':
-		$query_str = '?stage=preparse_posts';
+		$query_str = '?stage=conv_mods&req_old_charset='.$old_charset;
 
 		if (!$mysql || empty($_SESSION['dupe_users']))
 			break;
@@ -1693,6 +1693,60 @@ foreach ($errors[$id] as $cur_error)
 <?php
 
 		}
+
+		break;
+
+
+	// Convert remaining tables (tables not part of FluxBB core)
+	// This will convert all tables with latin1 collation
+	case 'conv_mods':
+		$query_str = '?stage=preparse_posts';
+
+		// This currently only works with MySQL/MySQLi (will add support for PostgreSQL and SQLite later)
+		if (!$mysql)
+			break;
+
+		// Check if there are any more tables to convert (only check for tables with an id column since the convert_table_utf8 function only works with tables with an id column)
+		$result = $db->query('SELECT a.TABLE_NAME FROM INFORMATION_SCHEMA.TABLES AS a INNER JOIN INFORMATION_SCHEMA.COLUMNS AS b ON a.TABLE_NAME=b.TABLE_NAME WHERE a.TABLE_SCHEMA=\''.$db_name.'\' AND a.TABLE_NAME LIKE \''.$db->prefix.'%\' AND a.TABLE_COLLATION LIKE \'latin1_%\' AND b.COLUMN_NAME IN (\'id\') ORDER BY a.TABLE_NAME LIMIT 1') or error('Unable to fetch table info', __FILE__, __LINE__, $db->error());
+		if (!$db->num_rows($result))
+			break;
+
+		$convert_table_name = $db->result($result);
+
+		// remove table prefix
+		$prefix = $db->prefix;
+		if (substr($convert_table_name, 0, strlen($prefix)) == $prefix)
+			$convert_table_name = substr($convert_table_name, strlen($prefix));
+
+		$fnct_string = "
+		function _conv_".$convert_table_name."(\$cur_item, \$old_charset)
+		{
+			global \$lang_update, \$convert_table_name, \$db, \$db_name;
+
+			echo sprintf(\$lang_update['Converting item'], \$convert_table_name, \$cur_item['id']).'<br />'.\"\n\";
+
+			// Fetch all columns in table
+			\$result = \$db->query('SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=\''.\$db_name.'\' AND TABLE_NAME=\''.\$db->prefix.\$convert_table_name.'\'') or error('Unable to fetch table column list', __FILE__, __LINE__, \$db->error());
+			// If there are columns in the table
+			if (\$db->num_rows(\$result))
+			{
+				while (\$cur_column = \$db->fetch_assoc(\$result))
+				{
+					convert_to_utf8(\$cur_item[\$cur_column['COLUMN_NAME']], \$old_charset);
+				}
+			}
+
+			return \$cur_item;
+		}
+		";
+		eval($fnct_string);
+
+		$end_at = convert_table_utf8($db->prefix.$convert_table_name, '_conv_'.$convert_table_name, $old_charset, 'id', $start_at);
+
+		if ($end_at !== true)
+			$query_str = '?stage=conv_mods&req_old_charset='.$old_charset.'&start_at='.$end_at;
+		else
+			$query_str = '?stage=conv_mods&req_old_charset='.$old_charset; // Start with new table
 
 		break;
 
