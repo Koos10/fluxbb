@@ -1168,8 +1168,9 @@ function pun_linebreaks($str)
 //
 function pun_trim($str, $charlist = false)
 {
-	return is_string($str) ? utf8_trim($str, $charlist) : '';
+	return is_string($str) ? utf8_trim($str, $charlist) : (is_numeric($str) ? $str : '');
 }
+
 
 //
 // Checks if a string is in all uppercase
