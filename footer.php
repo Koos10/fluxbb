@@ -142,6 +142,23 @@ if (defined('PUN_DEBUG'))
 	echo ' ]</p>'."\n";
 }
 
+?>
+<script type="text/javascript">
+// Create a hidden input element, and append it to the form
+function addHidden(theForm, key, value) {
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = value;
+    theForm.appendChild(input);
+}
+
+var forms = document.getElementsByTagName("form"); 
+for (var i = 0; i < forms.length; i++) {
+    addHidden(forms[i], "csrf_hash", "<?php echo csrf_hash() ?>");
+}
+</script>
+<?php
 
 // End the transaction
 $db->end_transaction();

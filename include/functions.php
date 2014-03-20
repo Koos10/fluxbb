@@ -1046,39 +1046,46 @@ function random_key($len, $readable = false, $hash = false)
 
 
 //
-// Make sure that HTTP_REFERER matches base_url/script
+// Check if a valid CSRF token was submitted with a form
 //
 function confirm_referrer($scripts, $error_msg = false)
 {
-	global $pun_config, $lang_common;
+	global $pun_config, $lang_common, $pun_user, $cookie_seed;
 
 	if (!is_array($scripts))
 		$scripts = array($scripts);
 
-	// There is no referrer
-	if (empty($_SERVER['HTTP_REFERER']))
+	if (isset($_POST['csrf_hash']))
+		$hash = $_POST['csrf_hash'];
+	else if (isset($_GET['csrf_hash']))
+		$hash = $_GET['csrf_hash'];
+	else
 		message($error_msg ? $error_msg : $lang_common['Bad referrer']);
 
-	$referrer = parse_url(strtolower($_SERVER['HTTP_REFERER']));
-	// Remove www subdomain if it exists
-	if (strpos($referrer['host'], 'www.') === 0)
-		$referrer['host'] = substr($referrer['host'], 4);
-
-	$valid_paths = array();
+	$valid_hashes = array();
 	foreach ($scripts as $script)
-	{
-		$valid = parse_url(strtolower(get_base_url().'/'.$script));
-		// Remove www subdomain if it exists
-		if (strpos($valid['host'], 'www.') === 0)
-			$valid['host'] = substr($valid['host'], 4);
+		$valid_hashes[] = pun_hash($script.get_remote_address().$pun_user['id'].$cookie_seed);
 
-		$valid_host = $valid['host'];
-		$valid_paths[] = $valid['path'];
-	}
-
-	// Check the host and path match. Ignore the scheme, port, etc.
-	if ($referrer['host'] != $valid_host || !in_array($referrer['path'], $valid_paths))
+	if (!in_array($hash, $valid_hashes))
 		message($error_msg ? $error_msg : $lang_common['Bad referrer']);
+}
+
+
+//
+// Generate a CSRF token for use when submitting a form
+//
+function csrf_hash($script = false)
+{
+	global $pun_config, $pun_user, $cookie_seed;
+	static $a = array();
+
+	$script = $script ? $script : basename($_SERVER['SCRIPT_NAME']);
+
+	if (isset($a[$script])) return $a[$script];
+
+	$a[$script] = pun_hash($script.get_remote_address().$pun_user['id'].$cookie_seed);
+
+	return $a[$script];
 }
 
 
