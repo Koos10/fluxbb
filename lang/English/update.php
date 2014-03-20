@@ -17,8 +17,8 @@ $lang_update = array(
 'Maintenance message'		    =>	'Maintenance message',
 'Next'							=>	'Next',
 
-'You are running error'			=>	'You are running %1$s version %2$s. FluxBB %3$s requires at least %1$s %4$s to run properly. You must upgrade your %1$s installation before you can continue.',
-'Version mismatch error'		=>	'Version mismatch. The database \'%s\' doesn\'t seem to be running a FluxBB database schema supported by this update script.',
+'You are running error'			=>	'You are running %1$s version %2$s. FluxBB %3$s requires at least %1$s %4$s to run properly. You must upgrade your %1$s installation before you can continue',
+'Version mismatch error'		=>	'Version mismatch. The database \'%s\' doesn\'t seem to be running a FluxBB database schema supported by this update script',
 'Invalid file error'			=>	'Invalid database file name. When using SQLite the database file name must be entered exactly as it appears in your \'%s\'',
 'Invalid password error'		=>	'Invalid database password. To upgrade FluxBB you must enter your database password exactly as it appears in your \'%s\'',
 'No password error'				=>	'No database password provided',
@@ -45,7 +45,7 @@ $lang_update = array(
 'Successfully updated'			=>	'Your forum database was successfully updated. You may now %s.',
 'go to index'					=>	'go to the forum index',
 
-'Unable to lock error'			=>	'Unable to write update lock. Please make sure PHP has write access to the directory \'%s\' and no-one else is currently running the update script.',
+'Unable to lock error'			=>	'Unable to write update lock. Please make sure PHP has write access to the directory \'%s\' and no-one else is currently running the update script',
 
 'Converting'					=>	'Converting %s …',
 'Converting item'				=>	'Converting %1$s %2$s …',

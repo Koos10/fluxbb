@@ -97,7 +97,7 @@ if (!defined('FORUM_CACHE_DIR'))
 
 // Make sure we are running at least MIN_PHP_VERSION
 if (!function_exists('version_compare') || version_compare(PHP_VERSION, MIN_PHP_VERSION, '<'))
-	exit(sprintf($lang_install['You are running error'], 'PHP', PHP_VERSION, FORUM_VERSION, MIN_PHP_VERSION));
+	exit(sprintf($lang_install['You are running error'].'.', 'PHP', PHP_VERSION, FORUM_VERSION, MIN_PHP_VERSION));
 
 
 //
