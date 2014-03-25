@@ -127,18 +127,11 @@ class DBLayer
 	{
 		if ($query_id)
 		{
-			if ($row != 0)
-			{
-				$result_rows = array();
-				while ($cur_result_row = @$query_id->fetchArray(SQLITE3_NUM))
-				{
-					$result_rows[] = $cur_result_row;
-				}
+			$result_rows = array();
+			while ($cur_result_row = @$query_id->fetchArray(SQLITE3_NUM))
+				$result_rows[] = $cur_result_row;
 
-				$cur_row = $result_rows[$row];
-			}
-			else
-				$cur_row = @$query_id->fetchArray(SQLITE3_NUM);
+			$cur_row = $result_rows[$row];
 
 			return $cur_row[$col];
 		}
