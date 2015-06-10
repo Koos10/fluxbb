@@ -131,9 +131,13 @@ class DBLayer
 			while ($cur_result_row = @$query_id->fetchArray(SQLITE3_NUM))
 				$result_rows[] = $cur_result_row;
 
-			$cur_row = $result_rows[$row];
+			if (!empty($result_rows) && array_key_exists($row, $result_rows))
+				$cur_row = $result_rows[$row];
 
-			return $cur_row[$col];
+			if (isset($cur_row))
+				return $cur_row[$col];
+			else
+				return false;
 		}
 		else
 			return false;
